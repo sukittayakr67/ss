@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELD-101 การออกแบบและพัฒนา e-Learning</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --bg-color: #f8fcfc;
+            --surface-color: #ffffff;
+            --text-color: #1a1a1a;
+            --text-muted: #555555;
+            --primary-teal: #006666;
+            --primary-teal-hover: #004c4c;
+            --accent-orange: #cc5500;
+            --border-color: #dddddd;
+            --sidebar-bg: #e6f2f2;
+            --success-color: #2e7d32;
+            --error-color: #c62828;
+            --focus-ring: rgba(0, 102, 102, 0.5);
+            --radius: 4px;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Variables */
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --primary-teal: #4db8b8;
+            --primary-teal-hover: #66c2c2;
+            --accent-orange: #ff8c42;
+            --border-color: #333333;
+            --sidebar-bg: #1a2626;
+            --success-color: #66bb6a;
+            --error-color: #ef5350;
+            --focus-ring: rgba(77, 184, 184, 0.5);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg-color: #121212; --surface-color: #1e1e1e; --text-color: #e0e0e0;
+                --text-muted: #aaaaaa; --primary-teal: #4db8b8; --primary-teal-hover: #66c2c2;
+                --accent-orange: #ff8c42; --border-color: #333333; --sidebar-bg: #1a2626;
+                --success-color: #66bb6a; --error-color: #ef5350;
+            }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            font-size: 17px; /* >= 17px */
+            line-height: 1.7;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Prompt', sans-serif; color: var(--primary-teal); margin-bottom: 1rem; line-height: 1.3; }
+        h1 { font-size: 1.8rem; border-bottom: 2px solid var(--primary-teal); padding-bottom: 0.5rem; }
+        h2 { font-size: 1.5rem; }
+        h3 { font-size: 1.25rem; }
+        
+        p, ul, ol { margin-bottom: 1.2rem; }
+        ul, ol { margin-left: 2rem; }
+        li { margin-bottom: 0.5rem; }
+        strong { font-weight: 700; }
+        
+        .content-container {
+            max-width: 70ch; /* Limit line length */
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .layout-wrapper { display: flex; flex: 1; flex-direction: column; }
+        
+        @media (min-width: 992px) {
+            .layout-wrapper { flex-direction: row; }
+        }
+
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+        
+        @media (min-width: 992px) {
+            .sidebar { width: 300px; position: sticky; top: 0; height: 100vh; overflow-y: auto; flex-shrink: 0; }
+            .mobile-nav-toggle { display: none !important; }
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem 1.5rem;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        .nav-list { list-style: none; margin-left: 0; }
+        .nav-item {
+            padding: 0.5rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            border-radius: var(--radius);
+            font-family: 'Prompt', sans-serif;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+        }
+        .nav-item:hover { background-color: rgba(0,0,0,0.05); }
+        .nav-item.active { background-color: var(--primary-teal); color: #fff; }
+        .nav-item.locked { opacity: 0.5; cursor: not-allowed; }
+        .status-icon { margin-right: 0.5rem; width: 20px; text-align: center; font-weight: bold; }
+        .status-done { color: var(--success-color); }
+        .nav-item.active .status-done { color: #fff; }
+
+        button {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--primary-teal);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover { background-color: var(--primary-teal-hover); }
+        button:disabled { background-color: var(--text-muted); cursor: not-allowed; }
+        button:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 3px solid var(--accent-orange);
+            outline-offset: 2px;
+        }
+        
+        .btn-secondary { background-color: transparent; border: 2px solid var(--primary-teal); color: var(--primary-teal); }
+        .btn-secondary:hover { background-color: rgba(0, 102, 102, 0.1); }
+        
+        .btn-danger { background-color: transparent; border: 1px solid var(--error-color); color: var(--error-color); font-size: 0.85rem; padding: 0.4rem 0.8rem; margin-top: 2rem;}
+        .btn-danger:hover { background-color: rgba(198, 40, 40, 0.1); }
+
+        input[type="text"] {
+            font-family: 'Sarabun', sans-serif; font-size: 1rem; padding: 0.6rem;
+            border: 1px solid var(--border-color); border-radius: var(--radius);
+            width: 100%; max-width: 300px; display: block; margin-bottom: 1rem;
+            background-color: var(--surface-color); color: var(--text-color);
+        }
+
+        .note-box {
+            background-color: rgba(204, 85, 0, 0.1); /* Accent orange tint */
+            border-left: 4px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+        .note-box strong { color: var(--accent-orange); }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; background-color: var(--surface-color); }
+        th, td { border: 1px solid var(--border-color); padding: 0.75rem; text-align: left; }
+        th { background-color: var(--sidebar-bg); font-family: 'Prompt', sans-serif; }
+
+        .page-section { display: none; }
+        .page-section.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
+
+        .question-block { margin-bottom: 2rem; background-color: var(--surface-color); padding: 1.5rem; border: 1px solid var(--border-color); }
+        .options-list { list-style: none; margin-left: 0; }
+        .option-item { margin-bottom: 0.5rem; }
+        .option-label { display: flex; align-items: flex-start; padding: 0.75rem; border: 1px solid var(--border-color); cursor: pointer; border-radius: var(--radius); transition: background-color 0.2s; }
+        .option-label:hover { background-color: var(--sidebar-bg); }
+        .option-input { margin-right: 1rem; margin-top: 0.3rem; }
+        .option-label.selected { border-color: var(--primary-teal); background-color: rgba(0, 102, 102, 0.05); }
+        
+        .feedback-area { margin-top: 1rem; padding: 1rem; border-radius: var(--radius); display: none; }
+        .feedback-area.correct { display: block; background-color: rgba(46, 125, 50, 0.1); border-left: 4px solid var(--success-color); }
+        .feedback-area.incorrect { display: block; background-color: rgba(198, 40, 40, 0.1); border-left: 4px solid var(--error-color); }
+
+        /* Activity Specifics */
+        .draggable-container { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .drag-item { padding: 0.5rem 1rem; background: var(--surface-color); border: 1px solid var(--border-color); cursor: pointer; border-radius: var(--radius); user-select: none; }
+        .drag-item:hover { border-color: var(--primary-teal); }
+        .drop-zone { min-height: 50px; border: 2px dashed var(--border-color); padding: 1rem; margin-bottom: 1rem; border-radius: var(--radius); display: flex; flex-direction: column; gap: 0.5rem; }
+        
+        .match-row { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+        @media (min-width: 600px) { .match-row { flex-direction: row; align-items: center; justify-content: space-between; } .match-row select { width: 50%; } }
+        select { font-family: 'Sarabun', sans-serif; font-size: 1rem; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius); background-color: var(--surface-color); color: var(--text-color); width: 100%;}
+
+        /* Top Bar Mobile */
+        .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background-color: var(--primary-teal); color: white; }
+        @media (min-width: 992px) { .mobile-header { display: none; } }
+        .menu-btn { background: none; border: none; color: white; font-size: 1.5rem; padding: 0; cursor: pointer; }
+        
+        .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10; }
+        .mobile-nav-overlay.show { display: block; }
+        @media (max-width: 991px) {
+            .sidebar { position: fixed; left: -300px; top: 0; height: 100vh; width: 280px; z-index: 20; }
+            .sidebar.show { transform: translateX(300px); }
+        }
+
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+        
+        /* Theme Toggle */
+        .theme-toggle { background: transparent; color: var(--text-color); border: 1px solid var(--border-color); padding: 0.3rem 0.6rem; font-size: 0.8rem; margin-bottom: 1rem; width: 100%; text-align: left;}
+    </style>
+</head>
+<body>
+
+    <div class="mobile-header">
+        <div style="font-family: 'Prompt', sans-serif; font-weight: 600;">ELD-101</div>
+        <button class="menu-btn" onclick="toggleMobileMenu()" aria-label="เปิดเมนูสารบัญ">☰</button>
+    </div>
+    <div class="mobile-nav-overlay" id="navOverlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="layout-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <button class="theme-toggle" onclick="toggleTheme()">สลับโหมดสว่าง/มืด</button>
+            <h2 style="font-size: 1.2rem; margin-bottom: 1rem;">สารบัญบทเรียน</h2>
+            <nav>
+                <ul class="nav-list" id="menuList">
+                    <!-- Menu generated by JS -->
+                </ul>
+            </nav>
+            <button class="btn-danger" id="resetBtn" onclick="handleReset()">เริ่มเรียนใหม่ (ลบข้อมูล)</button>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-container" id="contentArea">
+                
+                <section id="page-home" class="page-section">
+                    <h1>ยินดีต้อนรับสู่ ELD-101</h1>
+                    <h2>การออกแบบและพัฒนา e-Learning</h2>
+                    <p>บทเรียนนี้ออกแบบมาสำหรับนักศึกษาครูคอมพิวเตอร์ เพื่อให้เข้าใจกระบวนการสร้าง e-Learning ที่มีประสิทธิภาพ ใช้เวลาเรียนประมาณ 90 นาที</p>
+                    
+                    <div class="note-box">
+                        <strong>วัตถุประสงค์การเรียนรู้:</strong>
+                        <ol>
+                            <li>อธิบายขั้นตอนของ ADDIE และผลงานแต่ละขั้น</li>
+                            <li>เขียนวัตถุประสงค์ที่วัดได้และจัดลำดับบทเรียนตาม Gagné</li>
+                            <li>วินิจฉัยปัญหาสื่อด้วยหลักของ Mayer และเกณฑ์การเข้าถึง</li>
+                            <li>เลือกหลักฐานประเมินผลการเรียนรู้ได้เหมาะสม</li>
+                        </ol>
+                    </div>
+
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        * ข้อมูลความก้าวหน้าและคะแนนจะถูกบันทึกไว้ในเบราว์เซอร์ของเครื่องนี้เท่านั้น ไม่มีการส่งข้อมูลออกไปยังเซิร์ฟเวอร์ภายนอก
+                    </p>
+
+                    <div style="margin-top: 2rem;">
+                        <label for="nicknameInput"><strong>กรุณาระบุชื่อเล่น หรือรหัสสมมติ เพื่อเริ่มเรียน:</strong></label>
+                        <input type="text" id="nicknameInput" placeholder="พิมพ์ชื่อเล่นที่นี่...">
+                        <button onclick="startCourse()">เริ่มทำแบบทดสอบก่อนเรียน</button>
+                        <div id="nameError" style="color: var(--error-color); display: none; margin-top: 0.5rem;">กรุณากรอกชื่อก่อนเริ่มเรียน</div>
+                    </div>
+                </section>
+
+                <section id="page-pretest" class="page-section">
+                    <h1>แบบทดสอบก่อนเรียน</h1>
+                    <p>แบบทดสอบมี 8 ข้อ ไม่มีการเก็บคะแนนเพื่อตัดสินผ่าน/ไม่ผ่าน โปรดตอบตามความเข้าใจปัจจุบันของคุณ</p>
+                    <div id="pretest-container"></div>
+                    <button id="submitPretestBtn" onclick="submitTest('pre')" style="margin-top: 1rem; display: none;">ส่งคำตอบและเริ่มบทเรียน</button>
+                </section>
+
+                <section id="page-m1-content" class="page-section">
+                    <h1>บทที่ 1: ภาพรวม e-Learning และ ADDIE</h1>
+                    <p><strong>e-Learning</strong> คือการใช้เทคโนโลยีอิเล็กทรอนิกส์เพื่อส่งมอบ ออกแบบ และจัดการการเรียนรู้ แบ่งรูปแบบการเรียนรู้หลักได้ 2 แบบ:</p>
+                    <ul>
+                        <li><strong>Synchronous (ประสานเวลา):</strong> ผู้เรียนและผู้สอนอยู่พร้อมกันในเวลาเดียวกัน (เช่น Zoom, Google Meet)</li>
+                        <li><strong>Asynchronous (ไม่ประสานเวลา):</strong> ผู้เรียนเข้าเรียนเวลาใดก็ได้ตามสะดวก (เช่น คอร์สแวร์นี้, วิดีโอบันทึก)</li>
+                    </ul>
+                    
+                    <h3>โมเดล ADDIE</h3>
+                    <p>กรอบการทำงานพื้นฐานในการออกแบบการสอน ประกอบด้วย 5 ขั้นตอน:</p>
+                    <table>
+                        <thead><tr><th>ขั้นตอน</th><th>คำถามหลัก</th><th>ผลงานที่ได้ (Output)</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>A</strong>nalyze (วิเคราะห์)</td><td>ผู้เรียนคือใคร? เรียนเพื่อแก้ปัญหาอะไร?</td><td>ข้อมูลผู้เรียน, วัตถุประสงค์กว้างๆ, ข้อจำกัด</td></tr>
+                            <tr><td><strong>D</strong>esign (ออกแบบ)</td><td>จะสอนอย่างไรให้บรรลุเป้าหมาย?</td><td>วัตถุประสงค์เชิงพฤติกรรม, สตอรี่บอร์ด, โครงสร้างบทเรียน</td></tr>
+                            <tr><td><strong>D</strong>evelop (พัฒนา)</td><td>สร้างสื่อจริงตามที่ออกแบบไว้</td><td>สื่อที่เสร็จสมบูรณ์, ระบบ e-Learning พร้อมใช้</td></tr>
+                            <tr><td><strong>I</strong>mplement (นำไปใช้)</td><td>นำไปสอนจริงได้อย่างไร?</td><td>การอบรมผู้สอน, การลงทะเบียนผู้เรียน, คู่มือ</td></tr>
+                            <tr><td><strong>E</strong>valuate (ประเมินผล)</td><td>บรรลุเป้าหมายหรือไม่? สื่อดีไหม?</td><td>รายงานประเมินผล, ข้อเสนอแนะปรับปรุง</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="note-box">
+                        <strong>หมายเหตุ:</strong> ADDIE ไม่จำเป็นต้องทำเป็นเส้นตรงทางเดียว (Linear) ในทางปฏิบัติเราสามารถย้อนกลับไปแก้ไขขั้นตอนก่อนหน้าได้เสมอ (Iterative process)
+                    </div>
+                </section>
+
+                <section id="page-m1-act" class="page-section">
+                    <h1>กิจกรรม: เรียงลำดับ ADDIE</h1>
+                    <p>คลิกเลือกขั้นตอนด้านล่างเพื่อเรียงลำดับกระบวนการ ADDIE ให้ถูกต้อง</p>
+                    <div id="m1-source" class="draggable-container"></div>
+                    <div id="m1-target" class="drop-zone"></div>
+                    <button onclick="checkM1Activity()">ตรวจคำตอบ</button>
+                    <button onclick="resetM1Activity()" class="btn-secondary">เริ่มใหม่</button>
+                    <div id="m1-feedback" class="feedback-area" aria-live="polite"></div>
+                </section>
+
+                <section id="page-m1-cfu" class="page-section">
+                    <h1>ตรวจสอบความเข้าใจ บทที่ 1</h1>
+                    <div id="m1-cfu-container"></div>
+                    <button onclick="checkCFU('m1')">ส่งคำตอบ</button>
+                </section>
+
+                <section id="page-m2-content" class="page-section">
+                    <h1>บทที่ 2: การออกแบบการสอน (Instructional Design)</h1>
+                    <h3>การเขียนวัตถุประสงค์ที่วัดได้</h3>
+                    <p>วัตถุประสงค์ที่ดีต้องระบุพฤติกรรมที่สังเกตได้และวัดได้ หลีกเลี่ยงคำว่า "รู้" หรือ "เข้าใจ" นิยมใช้ตารางระดับพุทธิพิสัยของ Bloom ฉบับปรับปรุง (Anderson & Krathwohl, 2001):</p>
+                    <table>
+                        <thead><tr><th>ระดับ (ต่ำไปสูง)</th><th>ความหมาย</th><th>ตัวอย่างคำกริยา</th></tr></thead>
+                        <tbody>
+                            <tr><td>1. จำ (Remember)</td><td>ดึงข้อมูลจากความจำ</td><td>ระบุ, บอกชื่อ, จับคู่</td></tr>
+                            <tr><td>2. เข้าใจ (Understand)</td><td>สร้างความหมายจากข้อความ/ภาพ</td><td>อธิบาย, สรุป, ยกตัวอย่าง</td></tr>
+                            <tr><td>3. ประยุกต์ใช้ (Apply)</td><td>นำขั้นตอนไปใช้ในสถานการณ์</td><td>คำนวณ, สาธิต, แก้ปัญหา</td></tr>
+                            <tr><td>4. วิเคราะห์ (Analyze)</td><td>แยกแยะส่วนประกอบและหาความสัมพันธ์</td><td>เปรียบเทียบ, วินิจฉัย, จัดกลุ่ม</td></tr>
+                            <tr><td>5. ประเมิน (Evaluate)</td><td>ตัดสินคุณค่าโดยใช้เกณฑ์</td><td>วิจารณ์, ตรวจสอบ, ตัดสินใจ</td></tr>
+                            <tr><td>6. สร้างสรรค์ (Create)</td><td>นำองค์ประกอบมารวมกันเป็นสิ่งใหม่</td><td>ออกแบบ, วางแผน, สร้าง</td></tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">อ้างอิง: Anderson, L. W., & Krathwohl, D. R. (2001). A taxonomy for learning, teaching, and assessing.</p>
+
+                    <h3 style="margin-top: 1.5rem;">เหตุการณ์การสอน 9 ขั้นของ Gagné</h3>
+                    <p>เพื่อออกแบบลำดับการเรียนรู้ให้สอดคล้องกับการทำงานของสมอง (Gagné, 1985):</p>
+                    <ol>
+                        <li><strong>เร้าความสนใจ (Gain Attention):</strong> ดึงผู้เรียนเข้าสู่บทเรียน</li>
+                        <li><strong>แจ้งวัตถุประสงค์ (Inform Objectives):</strong> บอกให้รู้ว่าจะทำอะไรได้</li>
+                        <li><strong>กระตุ้นความทรงจำเดิม (Stimulate Recall):</strong> ทบทวนความรู้เก่าที่จำเป็น</li>
+                        <li><strong>นำเสนอเนื้อหา (Present Content):</strong> ให้ข้อมูลใหม่</li>
+                        <li><strong>ชี้แนะแนวทาง (Provide Guidance):</strong> ยกตัวอย่าง, ให้เทคนิคการจำ</li>
+                        <li><strong>ให้ลงมือปฏิบัติ (Elicit Performance):</strong> ให้ผู้เรียนลองทำ</li>
+                        <li><strong>ให้ข้อมูลป้อนกลับ (Provide Feedback):</strong> บอกว่าทำถูกหรือผิดอย่างไร</li>
+                        <li><strong>ประเมินผล (Assess Performance):</strong> วัดผลตามวัตถุประสงค์</li>
+                        <li><strong>ส่งเสริมการถ่ายโยง (Enhance Retention & Transfer):</strong> นำไปประยุกต์ใช้ในงานจริง</li>
+                    </ol>
+                </section>
+
+                <section id="page-m2-act" class="page-section">
+                    <h1>กิจกรรม: จับคู่เหตุการณ์ของ Gagné</h1>
+                    <p>เลือกขั้นตอนของ Gagné ที่ตรงกับสถานการณ์การสอนที่กำหนดให้</p>
+                    <div id="m2-match-container"></div>
+                    <button onclick="checkM2Activity()">ตรวจคำตอบ</button>
+                    <div id="m2-feedback" class="feedback-area" aria-live="polite"></div>
+                </section>
+
+                <section id="page-m2-cfu" class="page-section">
+                    <h1>ตรวจสอบความเข้าใจ บทที่ 2</h1>
+                    <div id="m2-cfu-container"></div>
+                    <button onclick="checkCFU('m2')">ส่งคำตอบ</button>
+                </section>
+
+                <section id="page-m3-content" class="page-section">
+                    <h1>บทที่ 3: การออกแบบสื่อและกิจกรรม</h1>
+                    <h3>หลักการออกแบบสื่อของ Mayer (Multimedia Principles)</h3>
+                    <p>Mayer เสนอหลักการเพื่อลดภาระทางปัญญา (Cognitive Load) ตัวอย่างหลักที่สำคัญ:</p>
+                    <ul>
+                        <li><strong>Coherence (ความสอดคล้อง):</strong> ตัดสิ่งที่ไม่เกี่ยวข้อง (รูปสวยงามแต่นอกเรื่อง, เสียงเพลงคลอ) ออกไป</li>
+                        <li><strong>Signaling (การทำเครื่องหมาย):</strong> เน้นจุดสำคัญด้วยลูกศร สี หรือข้อความ</li>
+                        <li><strong>Segmenting (การแบ่งย่อย):</strong> แบ่งเนื้อหายาวๆ เป็นบทย่อยๆ ให้ผู้เรียนควบคุมจังหวะเรียนเองได้</li>
+                        <li><strong>Spatial Contiguity (ความใกล้ชิดทางพื้นที่):</strong> วางคำอธิบายไว้ใกล้กับภาพที่อธิบาย ไม่แยกไปไว้อีกหน้า</li>
+                        <li><strong>Redundancy (ความซ้ำซ้อน):</strong> อย่าใช้ "ภาพ + เสียงบรรยาย + ข้อความที่อ่านเหมือนเสียงเป๊ะๆ" พร้อมกัน ให้ใช้ "ภาพ + เสียงบรรยาย" ดีกว่า</li>
+                    </ul>
+
+                    <h3>ปฏิสัมพันธ์ 3 ประเภท (Moore, 1989)</h3>
+                    <p>e-Learning ควรมีปฏิสัมพันธ์ 1. ผู้เรียน-เนื้อหา 2. ผู้เรียน-ผู้สอน 3. ผู้เรียน-ผู้เรียน</p>
+
+                    <h3>การเข้าถึงได้ (Accessibility)</h3>
+                    <p>สร้างสื่อให้ทุกคนใช้งานได้รวมถึงผู้พิการ อิงตาม WCAG 2.x ระดับ AA:</p>
+                    <ul>
+                        <li><strong>ความต่างสี (Contrast):</strong> ตัวอักษรปกติกับพื้นหลังต้องมีอัตราส่วนอย่างน้อย 4.5:1 (ตัวอักษรใหญ่ 3:1)</li>
+                        <li><strong>Alt text:</strong> ใส่คำบรรยายแทนภาพเสมอ เผื่อโปรแกรมอ่านหน้าจอ (Screen reader)</li>
+                        <li><strong>วิดีโอ:</strong> ต้องมีคำบรรยายแทนเสียง (Captions)</li>
+                    </ul>
+                </section>
+
+                <section id="page-m3-act" class="page-section">
+                    <h1>กิจกรรม: วินิจฉัยปัญหาสไลด์</h1>
+                    <p>อ่านสถานการณ์แล้วเลือกว่าละเมิดหลักการใดมากที่สุด</p>
+                    <div id="m3-diag-container"></div>
+                    <button onclick="checkM3Activity()">ตรวจคำตอบ</button>
+                    <div id="m3-feedback" class="feedback-area" aria-live="polite"></div>
+                </section>
+
+                <section id="page-m3-cfu" class="page-section">
+                    <h1>ตรวจสอบความเข้าใจ บทที่ 3</h1>
+                    <div id="m3-cfu-container"></div>
+                    <button onclick="checkCFU('m3')">ส่งคำตอบ</button>
+                </section>
+
+                <section id="page-m4-content" class="page-section">
+                    <h1>บทที่ 4: การวัดผลและข้อมูลการเรียนรู้</h1>
+                    <h3>ประเภทของการประเมิน</h3>
+                    <ul>
+                        <li><strong>Formative (ระหว่างเรียน):</strong> เพื่อพัฒนา ให้ Feedback ทันที (เช่น กิจกรรมท้ายบท)</li>
+                        <li><strong>Summative (รวบยอด):</strong> เพื่อตัดสินผลหลังจบหลักสูตร (เช่น สอบปลายภาค)</li>
+                    </ul>
+                    <p>การวัดผลลัพธ์การเรียนรู้ นิยมเทียบ Pre-test และ Post-test โดยใช้ <strong>Normalized Gain</strong> ของ Hake เพื่อดูพัฒนาการสัมพัทธ์</p>
+
+                    <h3>การประเมิน 4 ระดับของ Kirkpatrick</h3>
+                    <ol>
+                        <li><strong>Reaction (ปฏิกิริยา):</strong> ผู้เรียนชอบไหม? (แบบสอบถามความพึงพอใจ)</li>
+                        <li><strong>Learning (การเรียนรู้):</strong> มีความรู้ทักษะเพิ่มไหม? (สอบคะแนน Post-test)</li>
+                        <li><strong>Behavior (พฤติกรรม):</strong> นำไปใช้ในงานจริงไหม? (หัวหน้างานประเมินพฤติกรรมที่เปลี่ยนไป)</li>
+                        <li><strong>Results (ผลลัพธ์):</strong> องค์กรได้ประโยชน์อะไร? (ยอดขายเพิ่ม, อุบัติเหตุลดลง)</li>
+                    </ol>
+
+                    <h3>มาตรฐานข้อมูล e-Learning</h3>
+                    <p><strong>SCORM</strong> เป็นมาตรฐานเก่า เน้นเก็บว่าเรียนจบหรือยัง ได้คะแนนเท่าไร ส่วน <strong>xAPI</strong> (Experience API) เป็นมาตรฐานใหม่ เก็บข้อมูลได้ละเอียดทุกแอคชัน รูปแบบคือ <code>Actor - Verb - Object</code> (เช่น "สมชาย" - "หยุดวิดีโอ" - "นาทีที่ 5")</p>
+
+                    <div class="note-box">
+                        <strong>จริยธรรมข้อมูล:</strong> การเก็บข้อมูลผู้เรียนต้องโปร่งใส แจ้งวัตถุประสงค์ และขอความยินยอม (Consent) ตามกฎหมาย PDPA
+                    </div>
+                </section>
+
+                <section id="page-m4-act" class="page-section">
+                    <h1>กิจกรรม: จับคู่หลักฐานกับระดับ Kirkpatrick</h1>
+                    <div id="m4-match-container"></div>
+                    <button onclick="checkM4Activity()">ตรวจคำตอบ</button>
+                    <div id="m4-feedback" class="feedback-area" aria-live="polite"></div>
+                </section>
+
+                <section id="page-m4-cfu" class="page-section">
+                    <h1>ตรวจสอบความเข้าใจ บทที่ 4</h1>
+                    <div id="m4-cfu-container"></div>
+                    <button onclick="checkCFU('m4')">ส่งคำตอบ</button>
+                </section>
+
+                <section id="page-posttest" class="page-section">
+                    <h1>แบบทดสอบหลังเรียน</h1>
+                    <p>แบบทดสอบ 8 ข้อชุดเดียวกับก่อนเรียน เพื่อประเมินความก้าวหน้าของคุณ</p>
+                    <div id="posttest-container"></div>
+                    <button id="submitPosttestBtn" onclick="submitTest('post')" style="margin-top: 1rem; display: none;">ส่งคำตอบและดูผลสรุป</button>
+                </section>
+
+                <section id="page-summary" class="page-section">
+                    <h1>สรุปผลการเรียน</h1>
+                    <div id="summary-content"></div>
+                </section>
+
+                <div class="controls" id="navControls" style="display: none;">
+                    <button id="prevBtn" class="btn-secondary" onclick="navigate(-1)">ก่อนหน้า</button>
+                    <button id="nextBtn" onclick="navigate(1)">ถัดไป</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Data Definitions
+        const pages = [
+            { id: 'page-home', title: 'หน้าแรก', type: 'info' },
+            { id: 'page-pretest', title: 'ทดสอบก่อนเรียน', type: 'test' },
+            { id: 'page-m1-content', title: 'บทที่ 1 เนื้อหา', type: 'content', mod: 1 },
+            { id: 'page-m1-act', title: 'กิจกรรม 1', type: 'act', mod: 1 },
+            { id: 'page-m1-cfu', title: 'ตรวจสอบ 1', type: 'cfu', mod: 1 },
+            { id: 'page-m2-content', title: 'บทที่ 2 เนื้อหา', type: 'content', mod: 2 },
+            { id: 'page-m2-act', title: 'กิจกรรม 2', type: 'act', mod: 2 },
+            { id: 'page-m2-cfu', title: 'ตรวจสอบ 2', type: 'cfu', mod: 2 },
+            { id: 'page-m3-content', title: 'บทที่ 3 เนื้อหา', type: 'content', mod: 3 },
+            { id: 'page-m3-act', title: 'กิจกรรม 3', type: 'act', mod: 3 },
+            { id: 'page-m3-cfu', title: 'ตรวจสอบ 3', type: 'cfu', mod: 3 },
+            { id: 'page-m4-content', title: 'บทที่ 4 เนื้อหา', type: 'content', mod: 4 },
+            { id: 'page-m4-act', title: 'กิจกรรม 4', type: 'act', mod: 4 },
+            { id: 'page-m4-cfu', title: 'ตรวจสอบ 4', type: 'cfu', mod: 4 },
+            { id: 'page-posttest', title: 'ทดสอบหลังเรียน', type: 'test' },
+            { id: 'page-summary', title: 'สรุปผล', type: 'info' }
+        ];
+
+        const testQuestions = [
+            { id: 'q1', text: 'ขอบเขตของขั้นตอน Design ในกระบวนการ ADDIE คือข้อใด?', options: ['วิเคราะห์กลุ่มเป้าหมาย', 'สร้างผลงานและระบบจริง', 'เขียนวัตถุประสงค์และสร้างสตอรี่บอร์ด', 'นำสื่อไปทดลองสอน'], answer: 2, explain: 'Design คือการออกแบบโครงร่าง วัตถุประสงค์ และสตอรี่บอร์ด ก่อนลงมือสร้างจริงในขั้น Develop' },
+            { id: 'q2', text: 'ข้อใดคือลักษณะสำคัญของ Asynchronous e-Learning?', options: ['ผู้เรียนและผู้สอนต้องออนไลน์พร้อมกัน', 'ผู้เรียนเข้าเรียนเวลาใดก็ได้ตามสะดวก', 'เน้นการบรรยายสดผ่านวิดีโอ', 'ไม่สามารถมีกิจกรรมโต้ตอบได้เลย'], answer: 1, explain: 'Asynchronous คือการเรียนแบบไม่ประสานเวลา ผู้เรียนจัดการเวลาเรียนด้วยตนเอง' },
+            { id: 'q3', text: 'ตามหลักของ Bloom (2001) วัตถุประสงค์ "ผู้เรียนสามารถวิเคราะห์โครงสร้าง..." อยู่ในระดับใด?', options: ['ระดับ 2 (Understand)', 'ระดับ 3 (Apply)', 'ระดับ 4 (Analyze)', 'ระดับ 5 (Evaluate)'], answer: 2, explain: 'การแยกแยะและหาความสัมพันธ์ของโครงสร้างจัดอยู่ในระดับ Analyze' },
+            { id: 'q4', text: 'ตามหลักการสอน 9 ขั้นของ Gagné "การกระตุ้นความทรงจำเดิม" ควรทำในขั้นตอนใด?', options: ['เป็นขั้นตอนแรกสุดเสมอ', 'ทำก่อนการนำเสนอเนื้อหาใหม่', 'ทำหลังจากให้ลงมือปฏิบัติ', 'ทำในขั้นตอนการประเมินผล'], answer: 1, explain: 'ควรดึงความรู้เดิมมาเชื่อมโยงก่อนที่จะนำเสนอเนื้อหาใหม่ (Present Content)' },
+            { id: 'q5', text: 'การใส่ข้อความบรรยายบนหน้าจอที่อ่านตรงกับเสียงพากย์ทุกประการ มักละเมิดหลักการใดของ Mayer?', options: ['Coherence', 'Signaling', 'Redundancy', 'Segmenting'], answer: 2, explain: 'หลัก Redundancy แนะนำว่าไม่ควรให้สมองรับข้อมูลซ้ำซ้อนช่องทางเดียวกัน (ตาอ่านตัวหนังสือ + ฟังเสียงเนื้อหาเดียวกัน)' },
+            { id: 'q6', text: 'มาตรฐาน WCAG 2.x AA กำหนดความต่างสี (Contrast Ratio) สำหรับตัวอักษรขนาดปกติไว้อย่างน้อยเท่าใด?', options: ['3.0 : 1', '4.5 : 1', '7.0 : 1', '10.0 : 1'], answer: 1, explain: 'WCAG AA กำหนดอัตราส่วน 4.5:1 สำหรับตัวอักษรปกติ และ 3:1 สำหรับตัวอักษรขนาดใหญ่' },
+            { id: 'q7', text: 'Kirkpatrick ระดับใดที่ใช้วัด "ผลลัพธ์ทางธุรกิจหรือผลกระทบที่เกิดขึ้นกับองค์กร"?', options: ['ระดับ 1 (Reaction)', 'ระดับ 2 (Learning)', 'ระดับ 3 (Behavior)', 'ระดับ 4 (Results)'], answer: 3, explain: 'ระดับ 4 วัดผลกระทบระดับองค์กร เช่น ยอดขาย อุบัติเหตุ ผลผลิต' },
+            { id: 'q8', text: 'โครงสร้างข้อมูลแบบ Actor-Verb-Object เป็นลักษณะเด่นของมาตรฐานใด?', options: ['SCORM 1.2', 'SCORM 2004', 'xAPI', 'AICC'], answer: 2, explain: 'xAPI ใช้โครงสร้าง Actor-Verb-Object เพื่อบันทึกพฤติกรรมการเรียนรู้ทุกรูปแบบ' }
+        ];
+
+        const cfuData = {
+            'm1': [
+                { q: 'ขั้นประเมินผล (Evaluate) ใน ADDIE ทำได้เฉพาะตอนจบโครงการเท่านั้น', opts: ['จริง', 'เท็จ'], ans: 1, exp: 'เท็จ: การประเมินผล(Formative) สามารถทำแทรกได้ในทุกขั้นตอนเพื่อปรับปรุงงาน' },
+                { q: 'ผลผลิต (Output) หลักของขั้นตอน Analyze คืออะไร?', opts: ['สตอรี่บอร์ด', 'ข้อมูลลักษณะผู้เรียนและปัญหา', 'ระบบ e-Learning'], ans: 1, exp: 'Analyze เน้นทำความเข้าใจผู้เรียนและปัญหา' }
+            ],
+            'm2': [
+                { q: 'คำกริยาใด เหมาะสมที่จะใช้เขียนวัตถุประสงค์เชิงพฤติกรรมมากที่สุด?', opts: ['รู้ซึ้ง', 'เข้าใจ', 'อธิบาย'], ans: 2, exp: 'อธิบาย เป็นพฤติกรรมที่สังเกตและวัดผลได้ชัดเจน' },
+                { q: 'การให้ทำแบบฝึกหัดท้ายบท ตรงกับขั้นใดของ Gagné?', opts: ['เร้าความสนใจ', 'ให้ลงมือปฏิบัติ (Elicit Performance)', 'แจ้งวัตถุประสงค์'], ans: 1, exp: 'การให้ผู้เรียนได้ลองทำคือ Elicit Performance' }
+            ],
+            'm3': [
+                { q: 'การแบ่งวิดีโอ 1 ชั่วโมง เป็นคลิปย่อย 5 คลิป ตรงกับหลักการใดของ Mayer?', opts: ['Segmenting', 'Signaling', 'Coherence'], ans: 0, exp: 'Segmenting คือการแบ่งเนื้อหาเป็นส่วนย่อยๆ เพื่อลดภาระทางปัญญา' },
+                { q: 'ข้อใดจำเป็นสำหรับวิดีโอเพื่อให้ผ่านเกณฑ์ Accessibility?', opts: ['คำบรรยายแทนเสียง (Captions)', 'ภาพกราฟิกเคลื่อนไหว', 'เพลงประกอบความละเอียดสูง'], ans: 0, exp: 'Captions จำเป็นสำหรับผู้ที่มีความบกพร่องทางการได้ยิน' }
+            ],
+            'm4': [
+                { q: 'การสอบปลายภาคเพื่อตัดเกรด เป็นการประเมินแบบใด?', opts: ['Formative Assessment', 'Summative Assessment'], ans: 1, exp: 'Summative คือการประเมินรวบยอดเพื่อสรุปผล' },
+                { q: 'หากนักศึกษาได้คะแนน Pre-test 4/10 และ Post-test 7/10 ค่า Normalized Gain คือเท่าใด?', opts: ['0.30', '0.50', '0.70'], ans: 1, exp: '(7 - 4) / (10 - 4) = 3 / 6 = 0.50' }
+            ]
+        };
+
+        // State Management
+        const storageKey = 'eld101_data';
+        let state = {
+            nickname: '',
+            currentIndex: 0,
+            completedPages: [],
+            preTestAnswers: {},
+            postTestAnswers: {},
+            cfuCompleted: { m1: false, m2: false, m3: false, m4: false },
+            actCompleted: { m1: false, m2: false, m3: false, m4: false },
+        };
+
+        const storage = {
+            get: () => { try { return JSON.parse(localStorage.getItem(storageKey)); } catch(e) { return null; } },
+            set: (val) => { try { localStorage.setItem(storageKey, JSON.stringify(val)); } catch(e) {} },
+            clear: () => { try { localStorage.removeItem(storageKey); } catch(e) {} }
+        };
+
+        function init() {
+            const saved = storage.get();
+            if (saved && saved.nickname) {
+                state = { ...state, ...saved };
+                // Ensure arrays/objects exist if older version state
+                if(!state.completedPages) state.completedPages = [];
+            }
+            
+            // Set theme
+            const savedTheme = localStorage.getItem('eld101_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+            
+            renderMenu();
+            renderTests();
+            renderCFUs();
+            initActivities();
+            goToPage(state.currentIndex);
+        }
+
+        function saveState() {
+            storage.set(state);
+            renderMenu();
+        }
+
+        function goToPage(index) {
+            if (index < 0 || index >= pages.length) return;
+            
+            // Validation rules
+            if (index > 0 && !state.nickname) {
+                index = 0; // Force to home
+            }
+            if (index > 1 && !state.completedPages.includes(1)) {
+                // Cannot pass pretest unless done
+                index = 1;
+            }
+
+            // Hide all
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            
+            // Show target
+            const targetId = pages[index].id;
+            document.getElementById(targetId).classList.add('active');
+            state.currentIndex = index;
+            
+            if(!state.completedPages.includes(index) && pages[index].type !== 'test' && pages[index].type !== 'act' && pages[index].type !== 'cfu') {
+                 // Auto complete info/content pages
+                 state.completedPages.push(index);
+            }
+
+            updateControls();
+            saveState();
+            window.scrollTo(0,0);
+            
+            if(pages[index].id === 'page-summary') {
+                renderSummary();
+            }
+
+            // Mobile menu close
+            document.getElementById('sidebar').classList.remove('show');
+            document.getElementById('navOverlay').classList.remove('show');
+        }
+
+        function navigate(dir) {
+            goToPage(state.currentIndex + dir);
+        }
+
+        function updateControls() {
+            const controls = document.getElementById('navControls');
+            const prev = document.getElementById('prevBtn');
+            const next = document.getElementById('nextBtn');
+            
+            if (state.currentIndex === 0) {
+                controls.style.display = 'none';
+            } else {
+                controls.style.display = 'flex';
+                prev.style.display = state.currentIndex === 1 ? 'none' : 'block'; // Hide prev on pretest
+                
+                let nextEnabled = true;
+                const cp = pages[state.currentIndex];
+                
+                // Rules for enabling next button
+                if (cp.id === 'page-pretest' && !state.completedPages.includes(state.currentIndex)) nextEnabled = false;
+                if (cp.id === 'page-posttest' && !state.completedPages.includes(state.currentIndex)) nextEnabled = false;
+                if (cp.type === 'act' && !state.actCompleted[`m${cp.mod}`]) nextEnabled = false;
+                if (cp.type === 'cfu' && !state.cfuCompleted[`m${cp.mod}`]) nextEnabled = false;
+
+                next.disabled = !nextEnabled;
+                next.style.display = state.currentIndex === pages.length - 1 ? 'none' : 'block';
+            }
+        }
+
+        function renderMenu() {
+            const list = document.getElementById('menuList');
+            list.innerHTML = '';
+            
+            let canAccessNext = true;
+
+            pages.forEach((p, idx) => {
+                if(idx === 0) return; // Skip home in menu
+                
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                if (idx === state.currentIndex) li.classList.add('active');
+                
+                // Status icon logic
+                let icon = '○';
+                let iconClass = '';
+                if (state.completedPages.includes(idx)) {
+                    icon = '✓';
+                    iconClass = 'status-done';
+                }
+                
+                // Lock logic
+                if (idx > 1 && !state.completedPages.includes(1)) canAccessNext = false; // Lock if pretest not done
+                
+                if (!canAccessNext && idx > state.currentIndex && !state.completedPages.includes(idx)) {
+                    li.classList.add('locked');
+                    li.innerHTML = `<span class="status-icon ${iconClass}">🔒</span> ${p.title}`;
+                } else {
+                    li.innerHTML = `<span class="status-icon ${iconClass}">${icon}</span> ${p.title}`;
+                    li.onclick = () => goToPage(idx);
+                }
+                list.appendChild(li);
+            });
+        }
+
+        function startCourse() {
+            const name = document.getElementById('nicknameInput').value.trim();
+            if (name.length < 1) {
+                document.getElementById('nameError').style.display = 'block';
+                return;
+            }
+            state.nickname = name;
+            state.completedPages.push(0);
+            goToPage(1);
+        }
+
+        // Utility to shuffle array
+        function shuffle(array) {
+            let currentIndex = array.length,  randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function renderTests() {
+            ['pre', 'post'].forEach(type => {
+                const container = document.getElementById(`${type}test-container`);
+                if(!container) return;
+                container.innerHTML = '';
+                
+                // Shuffle questions but keep consistent ID tracking
+                const qList = [...testQuestions]; // Shallow copy
+                // For simplicity in this single file, we won't shuffle question order, only options.
+                
+                qList.forEach((q, qIndex) => {
+                    const block = document.createElement('div');
+                    block.className = 'question-block';
+                    
+                    const qTitle = document.createElement('h3');
+                    qTitle.textContent = `ข้อ ${qIndex + 1}: ${q.text}`;
+                    block.appendChild(qTitle);
+                    
+                    const ul = document.createElement('ul');
+                    ul.className = 'options-list';
+                    
+                    // Create option objects to track original index
+                    let opts = q.options.map((opt, origIdx) => ({ text: opt, origIdx: origIdx }));
+                    opts = shuffle(opts); // Randomize options
+
+                    opts.forEach((opt, optIdx) => {
+                        const li = document.createElement('li');
+                        li.className = 'option-item';
+                        
+                        const label = document.createElement('label');
+                        label.className = 'option-label';
+                        
+                        const input = document.createElement('input');
+                        input.type = 'radio';
+                        input.name = `${type}_q${q.id}`;
+                        input.value = opt.origIdx;
+                        input.className = 'option-input';
+                        
+                        input.addEventListener('change', () => {
+                            // Update UI
+                            ul.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
+                            label.classList.add('selected');
+                            
+                            // Check if all answered to show submit
+                            checkTestCompletion(type);
+                        });
+
+                        label.appendChild(input);
+                        label.appendChild(document.createTextNode(opt.text));
+                        li.appendChild(label);
+                        ul.appendChild(li);
+                    });
+                    
+                    block.appendChild(ul);
+                    
+                    // Feedback div for post-test
+                    if(type === 'post') {
+                        const fb = document.createElement('div');
+                        fb.id = `fb_${type}_q${q.id}`;
+                        fb.className = 'feedback-area';
+                        block.appendChild(fb);
+                    }
+                    
+                    container.appendChild(block);
+                });
+            });
+        }
+
+        function checkTestCompletion(type) {
+            const allChecked = testQuestions.every(q => {
+                const radios = document.getElementsByName(`${type}_q${q.id}`);
+                return Array.from(radios).some(r => r.checked);
+            });
+            
+            if (allChecked) {
+                document.getElementById(`submit${type.charAt(0).toUpperCase() + type.slice(1)}testBtn`).style.display = 'block';
+            }
+        }
+
+        function submitTest(type) {
+            let score = 0;
+            const answers = {};
+            
+            testQuestions.forEach(q => {
+                const radios = document.getElementsByName(`${type}_q${q.id}`);
+                let selectedVal = -1;
+                radios.forEach(r => { if(r.checked) selectedVal = parseInt(r.value); });
+                
+                answers[q.id] = selectedVal;
+                if (selectedVal === q.answer) score++;
+
+                // Show feedback for post test
+                if (type === 'post') {
+                    const fb = document.getElementById(`fb_post_q${q.id}`);
+                    radios.forEach(r => r.disabled = true); // Disable inputs
+                    if (selectedVal === q.answer) {
+                        fb.className = 'feedback-area correct';
+                        fb.innerHTML = `<strong>ถูกต้อง!</strong> ${q.explain}`;
+                    } else {
+                        fb.className = 'feedback-area incorrect';
+                        fb.innerHTML = `<strong>ไม่ถูกต้อง</strong> คำตอบคือ: ${q.options[q.answer]}<br><small>${q.explain}</small>`;
+                    }
+                }
+            });
+
+            if (type === 'pre') {
+                state.preTestAnswers = answers;
+                state.preTestScore = score;
+                if(!state.completedPages.includes(1)) state.completedPages.push(1);
+                // Disable pretest inputs
+                testQuestions.forEach(q => {
+                    document.getElementsByName(`pre_q${q.id}`).forEach(r => r.disabled = true);
+                });
+                document.getElementById('submitPretestBtn').style.display = 'none';
+                navigate(1);
+            } else {
+                state.postTestAnswers = answers;
+                state.postTestScore = score;
+                const postIdx = pages.findIndex(p => p.id === 'page-posttest');
+                if(!state.completedPages.includes(postIdx)) state.completedPages.push(postIdx);
+                document.getElementById('submitPosttestBtn').style.display = 'none';
+                updateControls();
+                saveState();
+                // Scroll to top to see results
+                window.scrollTo(0,0);
+            }
+        }
+
+        function renderCFUs() {
+            Object.keys(cfuData).forEach(mod => {
+                const container = document.getElementById(`${mod}-cfu-container`);
+                if(!container) return;
+                container.innerHTML = '';
+                
+                cfuData[mod].forEach((q, idx) => {
+                    const block = document.createElement('div');
+                    block.className = 'question-block';
+                    block.innerHTML = `<h4>ข้อ ${idx + 1}: ${q.q}</h4>`;
+                    
+                    const ul = document.createElement('ul');
+                    ul.className = 'options-list';
+                    
+                    q.opts.forEach((opt, optIdx) => {
+                        const li = document.createElement('li');
+                        li.className = 'option-item';
+                        li.innerHTML = `
+                            <label class="option-label">
+                                <input type="radio" name="cfu_${mod}_q${idx}" value="${optIdx}" class="option-input">
+                                ${opt}
+                            </label>
+                        `;
+                        // Add selection styling
+                        li.querySelector('input').addEventListener('change', function() {
+                             ul.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
+                             this.parentElement.classList.add('selected');
+                        });
+                        ul.appendChild(li);
+                    });
+                    block.appendChild(ul);
+                    
+                    const fb = document.createElement('div');
+                    fb.id = `fb_cfu_${mod}_q${idx}`;
+                    fb.className = 'feedback-area';
+                    block.appendChild(fb);
+                    
+                    container.appendChild(block);
+                });
+            });
+        }
+
+        function checkCFU(mod) {
+            let allAnswered = true;
+            let allCorrect = true;
+            
+            cfuData[mod].forEach((q, idx) => {
+                const radios = document.getElementsByName(`cfu_${mod}_q${idx}`);
+                let selected = -1;
+                radios.forEach(r => { if(r.checked) selected = parseInt(r.value); });
+                
+                const fb = document.getElementById(`fb_cfu_${mod}_q${idx}`);
+                if (selected === -1) {
+                    allAnswered = false;
+                    fb.className = 'feedback-area incorrect';
+                    fb.innerHTML = 'กรุณาเลือกคำตอบ';
+                    return;
+                }
+                
+                if (selected === q.ans) {
+                    fb.className = 'feedback-area correct';
+                    fb.innerHTML = `<strong>ถูกต้อง!</strong> ${q.exp}`;
+                } else {
+                    fb.className = 'feedback-area incorrect';
+                    fb.innerHTML = `<strong>ยังไม่ถูกลองใหม่นะ</strong><br><small>คำใบ้: ${q.exp}</small>`;
+                    allCorrect = false;
+                }
+            });
+            
+            if (allAnswered && allCorrect) {
+                state.cfuCompleted[mod] = true;
+                const pageIdx = pages.findIndex(p => p.id === `page-${mod}-cfu`);
+                if(!state.completedPages.includes(pageIdx)) state.completedPages.push(pageIdx);
+                updateControls();
+                saveState();
+            }
+        }
+
+        let m1Order = [];
+        function initActivities() {
+            // M1: ADDIE Sort
+            const m1Steps = ['Develop', 'Evaluate', 'Analyze', 'Implement', 'Design'];
+            const source = document.getElementById('m1-source');
+            source.innerHTML = '';
+            document.getElementById('m1-target').innerHTML = '<div style="color:var(--text-muted); text-align:center;">คลิกเลือกขั้นตอนจากด้านบนตามลำดับ</div>';
+            m1Order = [];
+            
+            m1Steps.forEach(step => {
+                const div = document.createElement('div');
+                div.className = 'drag-item';
+                div.textContent = step;
+                div.onclick = () => moveM1Item(div, step);
+                source.appendChild(div);
+            });
+
+            // M2: Gagné Match
+            const m2Scenarios = [
+                { text: "ครูเปิดคลิปวิดีโอสั้นๆ เกี่ยวกับอุบัติเหตุทางรถยนต์ก่อนเริ่มสอนเรื่องแรงเสียดทาน", ans: "1" },
+                { text: "ครูอธิบายว่า 'วันนี้เราจะมาเรียนวิธีคำนวณภาษี เพื่อให้ทุกคนยื่นภาษีเองได้ถูกต้อง'", ans: "2" },
+                { text: "ครูถามนักเรียนว่า 'จำเรื่องสมการกำลังสองที่เราเรียนสัปดาห์ที่แล้วได้ไหม?'", ans: "3" }
+            ];
+            const gagneEvents = ['เลือกขั้นตอน...', '1. เร้าความสนใจ', '2. แจ้งวัตถุประสงค์', '3. กระตุ้นความทรงจำเดิม', '4. นำเสนอเนื้อหา', '5. ชี้แนะแนวทาง'];
+            
+            const m2Cont = document.getElementById('m2-match-container');
+            m2Cont.innerHTML = '';
+            m2Scenarios.forEach((s, idx) => {
+                const row = document.createElement('div');
+                row.className = 'match-row';
+                let selectHtml = `<select id="m2_sel_${idx}">`;
+                gagneEvents.forEach((ev, i) => { selectHtml += `<option value="${i}">${ev}</option>`; });
+                selectHtml += `</select>`;
+                row.innerHTML = `<div style="flex:1;">${s.text}</div>${selectHtml}`;
+                m2Cont.appendChild(row);
+            });
+
+            // M3: Mayer Diag
+            const m3Scenarios = [
+                { text: "สไลด์มีรูปการ์ตูนเคลื่อนไหวดุ๊กดิ๊กตรงมุมจอ ซึ่งไม่เกี่ยวกับเนื้อหาเลย", opts: ['Coherence', 'Spatial Contiguity', 'Segmenting'], ans: 0 },
+                { text: "วิดีโอสอนโปรแกรมความยาว 2 ชั่วโมงรวด ไม่มีจุดให้กดข้ามหรือแบ่งตอน", opts: ['Signaling', 'Redundancy', 'Segmenting'], ans: 2 }
+            ];
+            const m3Cont = document.getElementById('m3-diag-container');
+            m3Cont.innerHTML = '';
+            m3Scenarios.forEach((s, idx) => {
+                let html = `<div style="margin-bottom: 1rem;"><strong>กรณีที่ ${idx+1}:</strong> ${s.text}<br>`;
+                s.opts.forEach((opt, i) => {
+                    html += `<label style="display:inline-block; margin-right: 1rem; margin-top: 0.5rem;"><input type="radio" name="m3_diag_${idx}" value="${i}"> ${opt}</label>`;
+                });
+                html += `</div>`;
+                m3Cont.innerHTML += html;
+            });
+
+            // M4: Kirk Match
+            const m4Scenarios = [
+                { text: "แบบสอบถาม 5 ดาว ถามว่า 'วิทยากรสอนสนุกหรือไม่'", ans: "1" },
+                { text: "เปรียบเทียบยอดขายก่อนและหลังพนักงานผ่านการอบรม", ans: "4" }
+            ];
+            const kirkEvents = ['เลือกระดับ...', 'ระดับ 1 (Reaction)', 'ระดับ 2 (Learning)', 'ระดับ 3 (Behavior)', 'ระดับ 4 (Results)'];
+            const m4Cont = document.getElementById('m4-match-container');
+            m4Cont.innerHTML = '';
+            m4Scenarios.forEach((s, idx) => {
+                const row = document.createElement('div');
+                row.className = 'match-row';
+                let selectHtml = `<select id="m4_sel_${idx}">`;
+                kirkEvents.forEach((ev, i) => { selectHtml += `<option value="${i}">${ev}</option>`; });
+                selectHtml += `</select>`;
+                row.innerHTML = `<div style="flex:1;">${s.text}</div>${selectHtml}`;
+                m4Cont.appendChild(row);
+            });
+        }
+
+        // M1 Logic
+        function moveM1Item(el, step) {
+            const target = document.getElementById('m1-target');
+            const source = document.getElementById('m1-source');
+            
+            if (el.parentElement === source) {
+                if(m1Order.length === 0) target.innerHTML = ''; // clear placeholder
+                target.appendChild(el);
+                m1Order.push(step);
+            } else {
+                source.appendChild(el);
+                m1Order = m1Order.filter(i => i !== step);
+                if(m1Order.length === 0) target.innerHTML = '<div style="color:var(--text-muted); text-align:center;">คลิกเลือกขั้นตอนจากด้านบนตามลำดับ</div>';
+            }
+        }
+        function resetM1Activity() { initActivities(); document.getElementById('m1-feedback').className='feedback-area'; }
+        function checkM1Activity() {
+            const fb = document.getElementById('m1-feedback');
+            const correct = ['Analyze', 'Design', 'Develop', 'Implement', 'Evaluate'];
+            if(m1Order.length !== 5) {
+                fb.className = 'feedback-area incorrect'; fb.textContent = 'กรุณาเลือกให้ครบ 5 ขั้นตอน'; return;
+            }
+            let isCorrect = true;
+            for(let i=0; i<5; i++) { if(m1Order[i] !== correct[i]) isCorrect = false; }
+            
+            if(isCorrect) {
+                fb.className = 'feedback-area correct'; fb.innerHTML = '<strong>ถูกต้อง!</strong> ลำดับ ADDIE คือ Analyze -> Design -> Develop -> Implement -> Evaluate';
+                completeAct('m1');
+            } else {
+                fb.className = 'feedback-area incorrect'; fb.textContent = 'ลำดับยังไม่ถูกต้อง ลองพิจารณาใหม่ (เริ่มจาก A -> D -> D -> I -> E)';
+            }
+        }
+
+        // Generic Activity Completion
+        function completeAct(mod) {
+            state.actCompleted[mod] = true;
+            const pageIdx = pages.findIndex(p => p.id === `page-${mod}-act`);
+            if(!state.completedPages.includes(pageIdx)) state.completedPages.push(pageIdx);
+            updateControls(); saveState();
+        }
+
+        function checkM2Activity() {
+            const v1 = document.getElementById('m2_sel_0').value;
+            const v2 = document.getElementById('m2_sel_1').value;
+            const v3 = document.getElementById('m2_sel_2').value;
+            const fb = document.getElementById('m2-feedback');
+            if (v1 === "1" && v2 === "2" && v3 === "3") {
+                fb.className = 'feedback-area correct'; fb.textContent = 'ถูกต้อง! วิเคราะห์สถานการณ์ได้สอดคล้องกับ Gagné'; completeAct('m2');
+            } else {
+                fb.className = 'feedback-area incorrect'; fb.textContent = 'ยังมีข้อที่จับคู่ไม่ถูกต้อง ลองทบทวนดูอีกครั้ง (สังเกตคีย์เวิร์ด: เปิดคลิป=เร้าใจ, วันนี้จะเรียน=แจ้งเป้า, จำเรื่องเดิม=กระตุ้น)';
+            }
+        }
+
+        function checkM3Activity() {
+            const r0 = document.querySelector('input[name="m3_diag_0"]:checked');
+            const r1 = document.querySelector('input[name="m3_diag_1"]:checked');
+            const fb = document.getElementById('m3-feedback');
+            if(!r0 || !r1) { fb.className = 'feedback-area incorrect'; fb.textContent = 'กรุณาตอบให้ครบทุกข้อ'; return; }
+            if(r0.value === "0" && r1.value === "2") {
+                fb.className = 'feedback-area correct'; fb.textContent = 'ถูกต้อง! รูปที่ไม่เกี่ยวขัดกับ Coherence และคลิปยาวเกินขัดกับ Segmenting'; completeAct('m3');
+            } else {
+                fb.className = 'feedback-area incorrect'; fb.textContent = 'ยังไม่ถูกต้อง ลองทบทวนหลักการ Mayer อีกครั้ง';
+            }
+        }
+
+        function checkM4Activity() {
+            const v1 = document.getElementById('m4_sel_0').value;
+            const v2 = document.getElementById('m4_sel_1').value;
+            const fb = document.getElementById('m4-feedback');
+            if (v1 === "1" && v2 === "4") {
+                fb.className = 'feedback-area correct'; fb.textContent = 'ถูกต้อง! ความชอบ=Reaction, ยอดขาย=Results'; completeAct('m4');
+            } else {
+                fb.className = 'feedback-area incorrect'; fb.textContent = 'ยังไม่ถูกต้อง ลองทบทวน 4 ระดับของ Kirkpatrick';
+            }
+        }
+
+        function renderSummary() {
+            const container = document.getElementById('summary-content');
+            const pre = state.preTestScore || 0;
+            const post = state.postTestScore || 0;
+            const max = testQuestions.length;
+            
+            // Calculate Normalized Gain (Hake, 1998)
+            let gainStr = '';
+            let gainValue = 0;
+            let interpretation = '';
+
+            if (pre === max) {
+                gainStr = "N/A";
+                interpretation = "ได้คะแนนเต็มตั้งแต่ก่อนเรียน ไม่สามารถคำนวณ Gain เชิงบวกได้";
+            } else {
+                gainValue = (post - pre) / (max - pre);
+                gainStr = gainValue.toFixed(2);
+                
+                if (gainValue < 0) {
+                    interpretation = "คะแนนลดลง อาจเกิดจากความคลาดเคลื่อนในการทำแบบทดสอบ หรือเนื้อหาบางส่วนทำให้เกิดความเข้าใจผิด";
+                } else if (gainValue >= 0.7) {
+                    interpretation = "พัฒนาการสูง (High Gain) - เข้าใจเนื้อหาได้ดีเยี่ยม";
+                } else if (gainValue >= 0.3) {
+                    interpretation = "พัฒนาการปานกลาง (Medium Gain) - เข้าใจเนื้อหาในระดับน่าพอใจ";
+                } else {
+                    interpretation = "พัฒนาการต่ำ (Low Gain) - อาจต้องทบทวนเนื้อหาเพิ่มเติม";
+                }
+            }
+
+            // Count completed modules (checking if CFU 4 is done as proxy for all)
+            const completedCount = Object.values(state.cfuCompleted).filter(Boolean).length;
+
+            container.innerHTML = `
+                <div style="background: var(--surface-color); padding: 2rem; border-radius: var(--radius); border: 1px solid var(--border-color); text-align: center;">
+                    <h2 style="font-size: 2rem;">คุณ ${state.nickname}</h2>
+                    <p style="font-size: 1.2rem; color: var(--text-muted);">สำเร็จบทเรียนไปแล้ว ${completedCount} จาก 4 บท</p>
+                    
+                    <div style="display: flex; justify-content: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                        <div style="padding: 1.5rem; background: var(--sidebar-bg); border-radius: var(--radius); min-width: 150px;">
+                            <div style="font-size: 1rem; color: var(--text-muted);">ก่อนเรียน</div>
+                            <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary-teal);">${pre}/${max}</div>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--sidebar-bg); border-radius: var(--radius); min-width: 150px;">
+                            <div style="font-size: 1rem; color: var(--text-muted);">หลังเรียน</div>
+                            <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary-teal);">${post}/${max}</div>
+                        </div>
+                        <div style="padding: 1.5rem; background: rgba(0, 102, 102, 0.1); border-radius: var(--radius); min-width: 150px; border: 1px solid var(--primary-teal);">
+                            <div style="font-size: 1rem; color: var(--primary-teal);">Normalized Gain</div>
+                            <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary-teal);">${gainStr}</div>
+                        </div>
+                    </div>
+
+                    <div class="note-box" style="text-align: left; max-width: 600px; margin: 0 auto;">
+                        <strong>การตีความหมาย:</strong><br>
+                        สูตรคำนวณ: <span style="font-family: monospace;">(หลัง - ก่อน) / (คะแนนเต็ม - ก่อน)</span><br>
+                        ผลลัพธ์ของคุณ: ${interpretation}<br><br>
+                        <small style="color: var(--text-muted);">*ข้อจำกัด: เนื่องจากแบบทดสอบมีจำนวนข้อจำกัด (8 ข้อ) ค่าที่ได้จึงเป็นเพียงแนวทางเบื้องต้นในการประเมินตนเอง ไม่ควรใช้เป็นตัวชี้วัดสมบูรณ์</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        let resetClicks = 0;
+        let resetTimer;
+        function handleReset() {
+            const btn = document.getElementById('resetBtn');
+            if (resetClicks === 0) {
+                resetClicks = 1;
+                btn.textContent = 'คลิกอีกครั้งเพื่อยืนยันลบข้อมูล';
+                btn.style.backgroundColor = 'var(--error-color)';
+                btn.style.color = '#fff';
+                resetTimer = setTimeout(() => {
+                    resetClicks = 0;
+                    btn.textContent = 'เริ่มเรียนใหม่ (ลบข้อมูล)';
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.color = 'var(--error-color)';
+                }, 3000);
+            } else {
+                clearTimeout(resetTimer);
+                storage.clear();
+                window.location.reload();
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.getElementById('navOverlay').classList.toggle('show');
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            try { localStorage.setItem('eld101_theme', newTheme); } catch(e) {}
+        }
+
+        // Run Initialization on Load
+        window.onload = init;
+
+    </script>
+</body>
+</html>
